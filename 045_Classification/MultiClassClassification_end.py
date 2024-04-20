@@ -6,6 +6,10 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import seaborn as sns
+
+# %%
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 # %% data import
 iris = load_iris()
 X = iris.data
@@ -22,9 +26,9 @@ X_test = X_test.astype('float32')
 class IrisData(Dataset):
     def __init__(self, X_train, y_train) -> None:
         super().__init__()
-        self.X = torch.from_numpy(X_train)
+        self.X = torch.from_numpy(X_train).to(device)
         self.y = torch.from_numpy(y_train)
-        self.y = self.y.type(torch.LongTensor)
+        self.y = self.y.type(torch.LongTensor).to(device)
         self.len = self.X.shape[0]
 
     def __getitem__(self, index):
@@ -60,7 +64,7 @@ NUM_FEATURES = iris_data.X.shape[1]
 HIDDEN = 6
 NUM_CLASSES = len(iris_data.y.unique())
 # %% create model instance
-model = MultiClassNet(NUM_FEATURES=NUM_FEATURES, NUM_CLASSES=NUM_CLASSES, HIDDEN_FEATURES=HIDDEN)
+model = MultiClassNet(NUM_FEATURES=NUM_FEATURES, NUM_CLASSES=NUM_CLASSES, HIDDEN_FEATURES=HIDDEN).to(device)
 # %% loss function
 criterion = nn.CrossEntropyLoss()
 # %% optimizer
@@ -87,20 +91,20 @@ for epoch in range(NUM_EPOCHS):
         # update parameters 
         optimizer.step()
         
-    losses.append(float(loss.data.detach().numpy()))
+    losses.append(float(loss.data.detach().cpu().numpy()))
         
 # %% show losses over epochs
 
 sns.lineplot(x= range(len(losses)), y = losses)
 # %% test the model
-X_test_torch = torch.from_numpy(X_test)
+X_test_torch = torch.from_numpy(X_test).to(device)
 with torch.no_grad():
     y_test_hat_softmax = model(X_test_torch)
     y_test_hat = torch.max(y_test_hat_softmax.data, 1)
 
 
 # %% Accuracy
-accuracy_score(y_test, y_test_hat.indices)
+accuracy_score(y_test, y_test_hat.indices.cpu())
 # %%
 from collections import Counter
 most_common_cnt = Counter(y_test).most_common()[0][1]

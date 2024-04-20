@@ -71,7 +71,7 @@ target = content_img.clone().requires_grad_(True)
 
 optimizer = Adam([target], lr=0.003)
 # %% train the model
-for i in range(1, 100):
+for i in range(1, 100 if device == 'cpu' else 500):
     
     target_features = extract_features(target, vgg)
 

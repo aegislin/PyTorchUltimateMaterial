@@ -8,10 +8,15 @@ from torch.utils.data import Dataset, DataLoader
 import seaborn as sns
 import numpy as np
 from collections import Counter
+
+# %% 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+
 # %% data prep
 X, y = make_multilabel_classification(n_samples=10000, n_features=10, n_classes=3, n_labels=2)
-X_torch = torch.FloatTensor(X)
-y_torch = torch.FloatTensor(y)
+X_torch = torch.FloatTensor(X).to(device)
+y_torch = torch.FloatTensor(y).to(device)
 
 # %% train test split
 X_train, X_test, y_train, y_test = train_test_split(X_torch, y_torch, test_size = 0.2)
@@ -53,7 +58,7 @@ class MultilabelNetwork(nn.Module):
 
 input_dim = X_torch.shape[1]
 output_dim = y_torch.shape[1]
-model = MultilabelNetwork(input_size=input_dim, hidden_size=20, output_size=output_dim)
+model = MultilabelNetwork(input_size=input_dim, hidden_size=20, output_size=output_dim).to(device)
 model.train()
 # %%
 loss_fn = nn.BCEWithLogitsLoss()
@@ -87,19 +92,21 @@ for epoch in range(number_epochs):
 sns.scatterplot(x=range(len(losses)), y=losses, alpha=0.1)
 
 # %% test the model
-X_test_torch = torch.FloatTensor(X_test)
+X_test_torch = X_test #torch.FloatTensor(X_test)
 with torch.no_grad():
     y_test_hat = model(X_test_torch).round()
     
 
 #%% Naive classifier accuracy
 # convert [1, 1, 0] to string '[1. 1. 0.]'
-y_test_str = [str(i) for i in y_test.detach().numpy()]
+y_test_str = [str(i) for i in y_test.detach().to('cpu').numpy()]
 y_test_str
 
 most_common_cnt = Counter(y_test_str).most_common()[0][1]
 print(f"Naive classifier: {most_common_cnt/len(y_test_str) * 100}%")
 
 # %% Test accuracy
-test_acc = accuracy_score(y_test, y_test_hat)
+test_acc = accuracy_score(y_test.to('cpu'), y_test_hat.to('cpu'))
 print(f"Test accuracy: {test_acc * 100}%")
+
+# %%
