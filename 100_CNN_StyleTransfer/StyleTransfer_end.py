@@ -6,8 +6,13 @@ from torch.optim import Adam
 from torchvision import transforms
 from torch.nn.functional import mse_loss
 from torchvision import models
+
+# %%
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 #%% 
 vgg = models.vgg19(pretrained=True).features
+vgg.to(device)
 # %% image transformations
 preprocess_steps = transforms.Compose([
     transforms.Resize((200, 200)),  # better (300, 300)
@@ -17,13 +22,13 @@ content_img = Image.open('Hamburg.jpg').convert('RGB')
 content_img = preprocess_steps(content_img)
 # transpose from C, H, W to H, W, C
 # content_img = content_img.transpose(0, 2)
-content_img = torch.unsqueeze(content_img, 0)
+content_img = torch.unsqueeze(content_img, 0).to(device)
 print(content_img.shape)
 
 style_img = Image.open('The_Great_Wave_off_Kanagawa.jpg').convert('RGB')
 style_img = preprocess_steps(style_img)
 # style_img = style_img.transpose(0, 2)
-style_img = torch.unsqueeze(style_img, 0)
+style_img = torch.unsqueeze(style_img, 0).to(device)
 print(style_img.shape)
 
 # %% feature extraction 

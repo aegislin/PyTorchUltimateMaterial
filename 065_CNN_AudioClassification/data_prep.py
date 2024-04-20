@@ -10,6 +10,10 @@ random.shuffle(wav_filenames)
 
 # %%
 ALLOWED_CLASSES = ['normal', 'murmur', 'extrahls', 'artifact']
+
+plot_num_max = 5
+plot_num = 0
+
 for f in wav_filenames:
     class_type = f.split('_')[0]
     f_index = wav_filenames.index(f)
@@ -28,6 +32,8 @@ for f in wav_filenames:
         data_waveform, sr = torchaudio.load(file_path)
         # create spectrogram and save it
         
-        plot_specgram(waveform=data_waveform, sample_rate=sr, file_path=target_file_path)
+        if plot_num < plot_num_max:
+            plot_specgram(waveform=data_waveform, sample_rate=sr, file_path=target_file_path)
+            plot_num += 1
         
 #%%

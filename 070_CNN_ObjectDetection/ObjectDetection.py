@@ -4,6 +4,9 @@ from detecto.visualize import show_labeled_image
 from torchvision import transforms
 import numpy as np
 
+# %% cuda test
+import torch
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 #%% data download
 path_images = 'images'
@@ -29,9 +32,9 @@ test_dataset = core.Dataset(image_folder=path_images, label_data=path_test_label
 train_loader = core.DataLoader(train_dataset, batch_size=2, shuffle=False)
 test_loader = core.DataLoader(test_dataset, batch_size=2, shuffle=False)
 # %% initialize model
-model = core.Model(trained_labels)
+model = core.Model(trained_labels, device=device)
 # %% perform the training
-losses = model.fit(train_loader, test_dataset, epochs=2, verbose=True)
+losses = model.fit(train_loader, test_dataset, epochs=20, verbose=True)
 
 # %% show image with predictions
 test_image_path = 'images/apple_77.jpg'
@@ -65,3 +68,5 @@ for j, data in enumerate(train_loader):
     print(j)
     image, label = data
     print(label)
+
+# %%

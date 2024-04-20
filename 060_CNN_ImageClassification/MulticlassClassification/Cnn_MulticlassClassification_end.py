@@ -10,6 +10,9 @@ import numpy as np
 from sklearn.metrics import accuracy_score, confusion_matrix
 os.getcwd()
 
+# %% cuda test
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 # %% transform and load data
 transform = transforms.Compose(
     [transforms.Resize((50,50)),
@@ -56,7 +59,7 @@ class ImageMulticlassClassificationNet(nn.Module):
         return x
 
 # input = torch.rand(1, 1, 50, 50) # BS, C, H, W
-model = ImageMulticlassClassificationNet()      
+model = ImageMulticlassClassificationNet().to(device)      
 # model(input).shape
 
 # %% 
@@ -68,10 +71,10 @@ for epoch in range(NUM_EPOCHS):
     for i, data in enumerate(trainloader, 0):
         inputs, labels = data
         optimizer.zero_grad()
-        outputs = model(inputs)
+        outputs = model(inputs.to(device))
 
         
-        loss = loss_fn(outputs, labels)
+        loss = loss_fn(outputs, labels.to(device))
         loss.backward()
         optimizer.step()
     
@@ -84,10 +87,10 @@ y_test_hat = []
 for i, data in enumerate(testloader, 0):
     inputs, y_test_temp = data
     with torch.no_grad():
-        y_test_hat_temp = model(inputs).round()
+        y_test_hat_temp = model(inputs.to(device)).round()
     
     y_test.extend(y_test_temp.numpy())
-    y_test_hat.extend(y_test_hat_temp.numpy())
+    y_test_hat.extend(y_test_hat_temp.to('cpu').numpy())
 
 # %%
 acc = accuracy_score(y_test, np.argmax(y_test_hat, axis=1))

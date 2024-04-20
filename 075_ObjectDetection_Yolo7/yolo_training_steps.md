@@ -14,7 +14,7 @@
 
 ## 3. Adapt cfg file
 
-- Create copy of yolov7\cfg\training\yolov7-e6e.yaml
+- Create copy of yolov7\cfg\training\yolov7.yaml
 - Set number of classes
 
 ## 4. Adapt data file

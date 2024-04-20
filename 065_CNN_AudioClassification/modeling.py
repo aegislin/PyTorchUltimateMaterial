@@ -8,6 +8,10 @@ import seaborn as sns
 import numpy as np
 from sklearn.metrics import accuracy_score, confusion_matrix
 from collections import Counter
+
+# %% cuda test
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 # %% transform and load data
 transform = transforms.Compose(
     [transforms.Resize((100,100)),
@@ -15,11 +19,16 @@ transform = transforms.Compose(
     transforms.ToTensor(),
     transforms.Normalize((0.5, ), (0.5, ))])
 
-batch_size = 4
-trainset = torchvision.datasets.ImageFolder(root='train', transform=transform)
+trainset = torchvision.datasets.ImageFolder(root='train', transform=transform) #size:102
+testset = torchvision.datasets.ImageFolder(root='test', transform=transform) #size:23
+
+#Using bigger batch_size for non-cpu to reduce data copy time
+#But since the training grad is zeroed for each batch the model might be poorer for smaller batches
+batch_size = 4 #if device == 'cpu' else 32
+
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
-testset = torchvision.datasets.ImageFolder(root='test', transform=transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=True)
+
 
 # %%
 CLASSES = ['artifact', 'extrahls', 'murmur', 'normal']
@@ -54,7 +63,8 @@ class ImageMulticlassClassificationNet(nn.Module):
         return x
 
 # input = torch.rand(1, 1, 100, 100) # BS, C, H, W
-model = ImageMulticlassClassificationNet()      
+model = ImageMulticlassClassificationNet().to(device)
+
 # model(input).shape
 
 # %% 
@@ -68,10 +78,10 @@ for epoch in range(NUM_EPOCHS):
     for i, data in enumerate(trainloader, 0):
         inputs, labels = data
         optimizer.zero_grad()
-        outputs = model(inputs)
+        outputs = model(inputs.to(device))
 
         
-        loss = loss_fn(outputs, labels)
+        loss = loss_fn(outputs, labels.to(device))
         loss.backward()
         optimizer.step()
         losses_epoch.append(loss.item())
@@ -87,10 +97,10 @@ y_test_hat = []
 for i, data in enumerate(testloader, 0):
     inputs, y_test_temp = data
     with torch.no_grad():
-        y_test_hat_temp = model(inputs).round()
+        y_test_hat_temp = model(inputs.to(device)).round()
     
     y_test.extend(y_test_temp.numpy())
-    y_test_hat.extend(y_test_hat_temp.numpy())
+    y_test_hat.extend(y_test_hat_temp.to('cpu').numpy())
 
 # %% Baseline Classifier
 Counter(y_test)
