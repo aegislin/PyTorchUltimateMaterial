@@ -11,6 +11,9 @@ from collections import Counter
 
 # %% 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cpu':
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+print(f'device={device}')
 
 
 # %% data prep

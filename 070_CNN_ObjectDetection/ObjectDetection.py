@@ -7,6 +7,10 @@ import numpy as np
 # %% cuda test
 import torch
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cpu':
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+print(f'device={device}')
+
 
 #%% data download
 path_images = 'images'
