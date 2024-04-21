@@ -9,6 +9,14 @@ from torchvision import transforms,models
 import matplotlib.pyplot as plt 
 import seaborn as sns
 from sklearn.metrics import accuracy_score
+
+# %%
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cpu':
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+print(f'device={device}')
+
+
 # %% data prep
 # original data from https://www.microsoft.com/en-us/download/details.aspx?id=54765
 
@@ -39,7 +47,7 @@ image_grid = torchvision.utils.make_grid(X_train[:16, :, :, :], scale_each= True
  
 imshow(image_grid) 
 # %% download pre-trained network
-model = models.densenet121(pretrained = True) 
+model = models.densenet121(pretrained = True).to(device)
 model 
 
 #%% modify layers
@@ -51,7 +59,7 @@ for params in model.parameters():
 model.classifier = nn.Sequential(OrderedDict([ 
     ('fc1',nn.Linear(1024,1)), 
     ('Output',nn.Sigmoid()) 
-])) 
+])).to(device) 
 model
 
 # %% train the model
@@ -60,7 +68,7 @@ loss_function = nn.BCELoss()
 train_losses=[] 
  
 model.train() 
-NUM_EPOCHS = 10
+NUM_EPOCHS = 10 if device == 'cpu' else 50
 for epoch in range(NUM_EPOCHS): 
     train_loss= 0 
     test_loss= 0 
@@ -70,9 +78,10 @@ for epoch in range(NUM_EPOCHS):
         opt.zero_grad() 
 
         # forward pass
-        output = model(img) 
+        output = model(img.to(device)).to(device) 
 
         # calc losses
+        label = label.to(device)
         loss = loss_function(output.squeeze(),label.float()) 
 
         # propagate losses
@@ -95,9 +104,9 @@ sns.lineplot(x = range(len(train_losses)), y = train_losses)
 # %%
 fig = plt.figure(figsize=(10, 10)) 
 class_labels = {0:'cat', 1:'dog'} 
-X_test, y_test = iter(test_loader).next() 
+X_test, y_test = iter(test_loader)._next_data()
 with torch.no_grad():
-    y_pred = model(X_test) 
+    y_pred = model(X_test.to(device)) 
     y_pred = y_pred.round()
     y_pred = [p.item() for p in y_pred] 
 

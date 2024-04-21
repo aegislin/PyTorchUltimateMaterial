@@ -93,7 +93,7 @@ for i in range(1, 100 if device == 'cpu' else 500):
         
 
         style_loss += layer_loss  
-    
+    #a: to make 2 losses similar in scales
     total_loss = 1000000 * style_loss + content_loss
     
     if i % 10 == 0:
