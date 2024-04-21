@@ -14,3 +14,4 @@ ind.pubmed*
 !350_SemiSupervised/data/train/
 !350_SemiSupervised/data/test/
 *.pyc
+065_CNN_AudioClassification/data/*
