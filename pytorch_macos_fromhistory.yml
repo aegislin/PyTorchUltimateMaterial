@@ -1,0 +1,13 @@
+name: ptu
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pytorch::pytorch
+  - torchaudio
+  - torchvision
+  - ipykernel
+  - conda-forge::matplotlib
+  - conda-forge::scikit-learn
+  - conda-forge::seaborn
+prefix: /Users/aegis/miniconda3/envs/ptu
