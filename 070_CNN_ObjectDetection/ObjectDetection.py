@@ -9,7 +9,11 @@ import torch
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 if device == 'cpu':
     device = 'mps' if torch.backends.mps.is_available() else 'cpu'
-print(f'device={device}')
+
+if device == 'mps':
+    print(f'device={device} but detecto seems to be having problems with it. Fall back to use cpu.')
+    device = 'cpu'
+
 
 
 #%% data download
@@ -38,7 +42,7 @@ test_loader = core.DataLoader(test_dataset, batch_size=2, shuffle=False)
 # %% initialize model
 model = core.Model(trained_labels, device=device)
 # %% perform the training
-losses = model.fit(train_loader, test_dataset, epochs=20, verbose=True)
+losses = model.fit(train_loader, test_dataset, epochs = 5 if device == 'cpu' else 20, verbose=True)
 
 # %% show image with predictions
 test_image_path = 'images/apple_77.jpg'
