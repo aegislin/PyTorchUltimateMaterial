@@ -4,6 +4,14 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 import seaborn as sns
+
+# %%
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cpu':
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+print(f'device={device}')
+
+
 # %% simple dataset
 num_points = 360*4
 X = np.arange(num_points)
@@ -65,7 +73,7 @@ class TrigonometryModel(nn.Module):
         return x
 
 #%% instantiate model, optimizer, and loss
-model = TrigonometryModel()
+model = TrigonometryModel().to(device)
 # input = torch.rand((2, 10, 1))  # BS, seq_len, input_size
 # model(input).shape  # out: [BS, seq_len, hidden]
 
@@ -79,8 +87,8 @@ NUM_EPOCHS = 20
 for epoch in range(NUM_EPOCHS):
     for j, (X, y) in enumerate(train_loader):
         optimizer.zero_grad()
-        y_pred = model(X.view(-1, 10, 1))
-        loss = loss_fun(y_pred, y.unsqueeze(1))
+        y_pred = model(X.view(-1, 10, 1).to(device))
+        loss = loss_fun(y_pred, y.unsqueeze(1).to(device))
         loss.backward()
         optimizer.step()
         print(f"Epoch: {epoch}, Loss: {loss.data}")
@@ -90,7 +98,7 @@ for epoch in range(NUM_EPOCHS):
 test_set = TrigonometricDataset(X_test, y_test)
 X_test_torch, y_test_torch = next(iter(test_loader))
 with torch.no_grad():
-    y_pred = model(torch.unsqueeze(X_test_torch, 2)).detach().squeeze().numpy()
+    y_pred = model(torch.unsqueeze(X_test_torch.to(device), 2)).detach().squeeze().cpu().numpy()
 y_act = y_test_torch.numpy()
 x_act = range(y_act.shape[0])
 sns.lineplot(x=x_act, y=y_act, label = 'Actual',color='black')
