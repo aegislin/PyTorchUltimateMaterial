@@ -16,7 +16,7 @@ print(f'Number of Entries: {len(data)}')
 data.head()
 
 # %%
-sns.lineplot(data.index, data.passengers, data=data)
+sns.lineplot(data=data, x=data.index, y=data.passengers)
 # %%
 # Convert passenter data to float32 for PyTorch
 num_points = len(data)
