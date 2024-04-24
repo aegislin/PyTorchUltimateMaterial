@@ -9,6 +9,11 @@ from torch_geometric.nn import GCNConv, GATConv
 import torch.nn.functional as F
 from sklearn.manifold import TSNE
 import seaborn as sns
+# %% cuda test
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cpu':
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+print(f'device={device}')
 
 #%% dataset
 dataset = Planetoid(root='data/Planetoid', name='PubMed', transform=NormalizeFeatures())
@@ -18,7 +23,7 @@ print(f'# graphs: {len(dataset)}')
 print(f'# features: {dataset.num_features}')
 print(f'# classes: {dataset.num_classes}')
 
-data = dataset[0]  # Get the first graph object.
+data = dataset[0].to(device)  # Get the first graph object.
 print(data)
 
 #%% train the model
@@ -49,14 +54,17 @@ class GAT(torch.nn.Module):
         x = self.conv2(x, edge_index)
         return x
 
+#model = GCN(num_hidden=16, num_features=dataset.num_features, num_classes=dataset.num_classes)
 model = GAT(num_hidden=16, num_features=dataset.num_features, num_classes=dataset.num_classes)
+model = model.to(device)
 optimizer = torch.optim.Adam(model.parameters())
 criterion = torch.nn.CrossEntropyLoss()
 
 #%% model training
 loss_lst = []
+NUM_EPOCHS = 1000 if device == 'cpu' else 2000
 model.train()
-for epoch in range(1000):
+for epoch in range(NUM_EPOCHS):
     optimizer.zero_grad()
     y_pred = model(data.x, data.edge_index)
     y_true = data.y
