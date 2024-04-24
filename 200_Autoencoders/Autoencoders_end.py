@@ -10,6 +10,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torchvision.utils 
 
+# %% cuda test
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cpu':
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+print(f'device={device}')
+
 #%% Dataset and data loader
 path_images = 'data/train'
 
@@ -71,22 +77,22 @@ class Autoencoder(nn.Module):
         return x
 
 # Test it
-input = torch.rand((1, 1, 64, 64))
-model = Autoencoder()
+input = torch.rand((1, 1, 64, 64), device=device)
+model = Autoencoder().to(device)
 model(input).shape
 
 
 #%% init model, loss function, optimizer
-model = Autoencoder()
+model = Autoencoder().to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-NUM_EPOCHS = 30
+NUM_EPOCHS = 30 if device == 'cpu' else 120
 
 for epoch in range(NUM_EPOCHS):
     losses_epoch = []
     for batch_idx, (data, target) in enumerate(dataloader):
-        data = data.view(-1, 1, 64, 64)
+        data = data.view(-1, 1, 64, 64).to(device)
         output = model(data)
 
         loss = F.mse_loss(output, data)
@@ -101,15 +107,16 @@ for epoch in range(NUM_EPOCHS):
 def show_image(img):
     img = 0.5 * (img + 1)  # denormalizeA
     # img = img.clamp(0, 1) 
-    npimg = img.numpy()
+    npimg = img.cpu().numpy()
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
 
-images, labels = iter(dataloader).next()
+images, labels = iter(dataloader)._next_data()
 print('original')
 plt.rcParams["figure.figsize"] = (20,3)
 show_image(torchvision.utils.make_grid(images))
 
 # %% latent space
+images = images.to(device)
 print('latent space')
 latent_img = model.encoder(images)
 latent_img = latent_img.view(-1, 1, 8, 16)
@@ -123,3 +130,5 @@ show_image(torchvision.utils.make_grid(model(images)))
 image_size = images.shape[2] * images.shape[3] * 1
 compression_rate = (1 - LATENT_DIMS / image_size) * 100
 compression_rate
+
+# %%
