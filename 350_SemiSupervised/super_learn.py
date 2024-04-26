@@ -10,9 +10,16 @@ import random
 from sklearn.metrics import accuracy_score
 from PIL import Image
 import seaborn as sns
+
+# %% cuda test
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cpu':
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+print(f'device={device}')
+
 # %% Hyperparameters
 BATCH_SIZE = 2
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 NUM_EPOCHS = 50
 # %% image transformation steps
 transform_super = transforms.Compose(
@@ -61,7 +68,7 @@ class SupervisedNet(nn.Module):
         x = self.output_layer_super(x)
         return x
 
-model = SupervisedNet(n_super_classes=2)
+model = SupervisedNet(n_super_classes=2).to(device)
 model.train()
 #%% Loss functions and Optimizer
 criterion_supervised = nn.CrossEntropyLoss()
@@ -78,10 +85,10 @@ for epoch in range(NUM_EPOCHS):
         optimizer.zero_grad()
         
         # forward pass
-        y_super_pred = model(X_super)
+        y_super_pred = model(X_super.to(device))
         
         # calc losses
-        loss = criterion_supervised(y_super_pred, y_super)
+        loss = criterion_supervised(y_super_pred, y_super.to(device))
         
         # calculate gradients
         loss.backward()
@@ -100,10 +107,10 @@ y_test_preds = []
 y_test_trues = []
 with torch.no_grad():
     for (X_test, y_test) in test_loader:
-         y_test_pred = model(X_test) 
+         y_test_pred = model(X_test.to(device)) 
          y_test_pred_argmax = torch.argmax(y_test_pred, axis = 1)
-         y_test_preds.extend(y_test_pred_argmax.numpy())
-         y_test_trues.extend(y_test.numpy())
+         y_test_preds.extend(y_test_pred_argmax.cpu().numpy())
+         y_test_trues.extend(y_test.cpu().numpy())
 # %%
 accuracy_score(y_pred=y_test_preds, y_true=y_test_trues)
 # %%

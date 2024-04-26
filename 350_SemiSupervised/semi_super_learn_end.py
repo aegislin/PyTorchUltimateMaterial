@@ -10,9 +10,16 @@ import random
 from sklearn.metrics import accuracy_score
 from PIL import Image
 import seaborn as sns
+
+# %% cuda test
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cpu':
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+print(f'device={device}')
+
+
 # %% Hyperparameters
 BATCH_SIZE = 10
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 NUM_EPOCHS = 50
 LOSS_FACTOR_SELFSUPERVISED = 1
 # %% image transformation steps
@@ -101,7 +108,7 @@ class SesemiNet(nn.Module):
         x_selfsupervised = self.output_layer_selfsuper(x_selfsupervised)
         return x_supervised, x_selfsupervised                
     
-model = SesemiNet(n_super_classes=2, n_selfsuper_classes=4)
+model = SesemiNet(n_super_classes=2, n_selfsuper_classes=4).to(device)
 model.train()
 #%% Loss functions and Optimizer
 criterion_supervised = nn.CrossEntropyLoss()
@@ -124,11 +131,11 @@ for epoch in range(NUM_EPOCHS):
         optimizer.zero_grad()
         
         # forward pass
-        y_super_pred, y_selfsuper_pred = model(X_super, X_selfsuper)
+        y_super_pred, y_selfsuper_pred = model(X_super.to(device), X_selfsuper.to(device))
               
         # TODO: calc losses
-        loss_super = criterion_supervised(y_super_pred, y_super)
-        loss_selfsuper = criterion_selfsupervised(y_selfsuper_pred, y_selfsuper)
+        loss_super = criterion_supervised(y_super_pred, y_super.to(device))
+        loss_selfsuper = criterion_selfsupervised(y_selfsuper_pred, y_selfsuper.to(device))
         loss = loss_super + loss_selfsuper * LOSS_FACTOR_SELFSUPERVISED
         
         # calculate gradients
@@ -149,9 +156,9 @@ y_test_preds = []
 y_test_trues = []
 with torch.no_grad():
     for (X_test, y_test) in test_loader:
-         y_test_pred = model(X_test, X_test) 
+         y_test_pred = model(X_test.to(device), X_test.to(device)) 
          y_test_pred_argmax = torch.argmax(y_test_pred[0], axis = 1)
-         y_test_preds.extend(y_test_pred_argmax.numpy())
+         y_test_preds.extend(y_test_pred_argmax.cpu().numpy())
          y_test_trues.extend(y_test.numpy())
 # %%
 accuracy_score(y_pred=y_test_preds, y_true=y_test_trues)
