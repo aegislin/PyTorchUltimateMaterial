@@ -38,9 +38,9 @@ embeddings = emb_model.encode(sentences)
 print(embeddings.squeeze().shape)
 
 #%% prepare X and y
-# X = emb_model.encode(df['text'].values)
-
-# with open("data/tweets_X.pkl", "wb") as output_file:
+#X = emb_model.encode(df['text'].values)
+#
+#with open("data/tweets_X.pkl", "wb") as output_file:
 #     pickle.dump(X, output_file)
 
 with open("data/tweets_X.pkl", "rb") as input_file:

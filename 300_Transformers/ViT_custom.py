@@ -59,7 +59,7 @@ plt.savefig("./conf_matrix_1.jpg")
 
 # %% Inference
 import os.path
-path = "./out/MYDOGCLASSIFIER/20_2022-09-09-22-30-04/model/"
+path = "./out/MYDOGCLASSIFIER/20_2024-04-25-23-15-41/model/"
 img  = "./test/affenpinscher/affenpinscher_0.jpg"
 
 classifier = VisionClassifierInference(
