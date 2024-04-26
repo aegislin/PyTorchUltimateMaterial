@@ -29,6 +29,7 @@ def predict():
         data = request.data.decode('utf-8')
         dict_data = json.loads(data.replace("'", "\""))
         X = torch.tensor([dict_data["data"]])
+        X = X.type(torch.FloatTensor)
         y_test_hat_softmax = model(X)
         y_test_hat = torch.max(y_test_hat_softmax, 1)
         y_test_cls = y_test_hat.indices.cpu().detach().numpy()[0]
