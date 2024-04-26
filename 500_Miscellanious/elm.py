@@ -15,7 +15,7 @@ X, y = make_blobs(n_samples=10000, n_features=2, centers=5, random_state=1)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
 
 # %% visualize data
-sns.scatterplot(X_train[:, 0], X_train[:, 1], hue=y_train)
+sns.scatterplot(x = X_train[:, 0], y = X_train[:, 1], hue=y_train)
 # %% Hyperparams
 INPUT_SIZE = X_train.shape[1]
 HIDDEN_SIZE = 1000
@@ -43,12 +43,12 @@ def predict(X):
 beta = np.dot(linalg.pinv(hidden_nodes(X_train)), y_train)
 
 # %% Validation
-y_test_pred = predict(X_test)
+y_test_preds = predict(X_test)
 correct = 0
 total = X_test.shape[0]
 
 for i in range(total):
-    y_test_pred = np.round(y_test_pred[i], 0)
+    y_test_pred = np.round(y_test_preds[i], 0)
     y_test_true = y_test[i]
     correct += 1 if y_test_pred == y_test_true else 0
 accuracy = correct/total
